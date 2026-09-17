@@ -7,6 +7,7 @@ from ..models import MemoryInfo
 from .._optional import HAS_PSUTIL, psutil
 
 _BYTES_PER_GB = 1024 ** 3
+_KB_PER_GB = 1024 ** 2
 
 
 def _windows_memory_fallback():
@@ -41,6 +42,29 @@ def _windows_memory_fallback():
     return total, available, used, used_percent
 
 
+def _linux_memory_fallback():
+    """Read total/available RAM from /proc/meminfo when psutil isn't installed.
+
+    MemAvailable (not MemFree) is the kernel's own estimate of memory a new
+    process could actually get, accounting for reclaimable cache - the same
+    number psutil.virtual_memory() itself derives its .available from on
+    Linux. Both fields have been present and stable in this format since
+    kernel 3.14, so no external command is needed.
+    """
+    values = {}
+    with open("/proc/meminfo", encoding="utf-8") as handle:
+        for line in handle:
+            key, _, rest = line.partition(":")
+            if key in ("MemTotal", "MemAvailable"):
+                values[key] = int(rest.strip().split()[0])  # kB
+
+    total = values["MemTotal"] / _KB_PER_GB
+    available = values["MemAvailable"] / _KB_PER_GB
+    used = total - available
+    used_percent = (used / total * 100) if total else 0.0
+    return total, available, used, used_percent
+
+
 def collect_memory_info(warnings: list) -> MemoryInfo:
     if HAS_PSUTIL:
         try:
@@ -66,6 +90,18 @@ def collect_memory_info(warnings: list) -> MemoryInfo:
             )
         except Exception as exc:  # noqa: BLE001
             warnings.append(f"memory: Win32 fallback failed ({exc})")
+    elif platform.system() == "Linux":
+        try:
+            total, available, used, used_percent = _linux_memory_fallback()
+            warnings.append("memory: used /proc/meminfo fallback (psutil not installed)")
+            return MemoryInfo(
+                total_gb=round(total, 2),
+                available_gb=round(available, 2),
+                used_gb=round(used, 2),
+                used_percent=round(used_percent, 1),
+            )
+        except Exception as exc:  # noqa: BLE001
+            warnings.append(f"memory: /proc/meminfo fallback failed ({exc})")
     else:
         warnings.append("memory: no psutil and no fallback for this OS - skipped")
 

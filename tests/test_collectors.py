@@ -6,10 +6,10 @@ installed), not test-only code, so it deserves direct coverage.
 """
 import platform
 import unittest
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 from inventory_tool.collectors.cpu_info import collect_cpu_info
-from inventory_tool.collectors.memory_info import collect_memory_info
+from inventory_tool.collectors.memory_info import _linux_memory_fallback, collect_memory_info
 from inventory_tool.collectors.network_info import collect_network_info
 from inventory_tool.collectors.os_info import collect_os_info
 from inventory_tool.collectors.storage_info import collect_storage_info
@@ -54,6 +54,40 @@ class MemoryInfoTests(unittest.TestCase):
         self.assertIsNotNone(info.total_gb)
         self.assertGreater(info.total_gb, 0)
         self.assertTrue(any("fallback" in w for w in warnings))
+
+    @unittest.skipUnless(platform.system() == "Linux", "/proc/meminfo fallback is Linux-only")
+    def test_linux_fallback_still_reports_memory(self):
+        warnings = []
+        with patch("inventory_tool.collectors.memory_info.HAS_PSUTIL", False):
+            info = collect_memory_info(warnings)
+        self.assertIsNotNone(info.total_gb)
+        self.assertGreater(info.total_gb, 0)
+        self.assertTrue(any("fallback" in w for w in warnings))
+
+    def test_linux_meminfo_parsing_is_correct_on_any_platform(self):
+        # /proc/meminfo's format is fixed by the kernel regardless of what OS
+        # runs this test suite, so the parsing math can be checked everywhere
+        # by feeding it fake file content - this is what actually caught the
+        # CI failure (the real /proc/meminfo path only ever ran on Windows,
+        # where it's unreachable, so nothing had exercised this function).
+        sample_meminfo = (
+            "MemTotal:       16374920 kB\n"
+            "MemFree:         2043988 kB\n"
+            "MemAvailable:    9876544 kB\n"
+            "Buffers:          123456 kB\n"
+            "Cached:          5432100 kB\n"
+        )
+        with patch(
+            "inventory_tool.collectors.memory_info.open",
+            mock_open(read_data=sample_meminfo),
+            create=True,
+        ):
+            total, available, used, used_percent = _linux_memory_fallback()
+
+        self.assertAlmostEqual(total, 16374920 / (1024 ** 2))
+        self.assertAlmostEqual(available, 9876544 / (1024 ** 2))
+        self.assertAlmostEqual(used, total - available)
+        self.assertTrue(0 <= used_percent <= 100)
 
 
 class StorageInfoTests(unittest.TestCase):

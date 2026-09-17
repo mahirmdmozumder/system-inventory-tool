@@ -236,14 +236,24 @@ path is real working code and not just something that looks plausible.
 - **The primary-IP bug above** — worth repeating here because it's the one that would
   have shipped quietly. Nothing crashed; the CSV just silently contained a useless
   address until I actually read my own output.
+- **The memory collector had no Linux fallback at all**, and I didn't notice on my own
+  machine because I only ever tested on Windows, where `HAS_PSUTIL=False` hits the Win32
+  branch. GitHub Actions' `ubuntu-latest` job runs the exact same "no psutil installed
+  yet" step the Windows job does, and it failed there immediately: `total_gb` came back
+  `None` because `collect_memory_info` fell through to the `else` branch and just logged
+  a warning instead of reading anything. Fixed by adding a `/proc/meminfo` fallback
+  (`MemTotal`/`MemAvailable`, the same fields `psutil.virtual_memory()` itself reads on
+  Linux) plus a platform-independent test that feeds it fake `/proc/meminfo` content, so
+  the parsing logic is now actually verified instead of only reviewed by eye.
 
 ## What I'd do next
 
-- **Linux/macOS testing on real hardware.** The stdlib fallback for storage and network
-  has non-Windows branches (`shutil.disk_usage("/")`, hostname-based IP resolution), and
-  the psutil path is cross-platform by design, but I built and tested this on Windows —
-  I'd want time on an actual Linux box before calling those paths verified rather than
-  "should work."
+- **macOS testing on real hardware.** CI now runs the full suite on `ubuntu-latest` with
+  and without `psutil`, which is what caught the missing Linux memory fallback (see
+  above), so the Linux path is genuinely exercised, not just "should work." macOS has no
+  CI job and no stdlib memory fallback yet — `collect_memory_info` would just warn and
+  return `None`s there without `psutil` installed. Worth a `sysctl`-based fallback and a
+  `macos-latest` CI job before claiming the same confidence on that platform.
 - **A `--compare` mode** that diffs two JSON reports from the same machine, so re-running
   this monthly could flag drive space dropping fast or a new network adapter appearing,
   instead of only ever showing a single point in time.
