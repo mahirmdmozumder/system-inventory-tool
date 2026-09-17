@@ -1,0 +1,5 @@
+# Optional. The tool runs on a bare Python install using stdlib-only
+# fallbacks (see inventory_tool/collectors/), but psutil unlocks fuller,
+# cross-platform detail: physical core counts, live CPU usage, per-disk
+# partitions, and per-interface MAC/up-down status.
+psutil>=5.9

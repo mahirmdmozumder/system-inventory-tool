@@ -1,0 +1,93 @@
+{
+  "generated_at": "2026-09-16T23:27:21",
+  "hostname": "DESKTOP-7T9TNRB",
+  "os": {
+    "system": "Windows",
+    "release": "11",
+    "version": "10.0.26200",
+    "architecture": "AMD64",
+    "hostname": "DESKTOP-7T9TNRB",
+    "boot_time": "2026-09-16T21:17:53"
+  },
+  "cpu": {
+    "processor": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+    "physical_cores": 8,
+    "logical_cores": 16,
+    "max_frequency_mhz": 3800.0,
+    "current_usage_percent": 22.1
+  },
+  "memory": {
+    "total_gb": 31.14,
+    "available_gb": 13.77,
+    "used_gb": 17.37,
+    "used_percent": 55.8
+  },
+  "disks": [
+    {
+      "device": "C:\\",
+      "mountpoint": "C:\\",
+      "filesystem": "NTFS",
+      "total_gb": 1861.94,
+      "used_gb": 1271.17,
+      "free_gb": 590.76,
+      "used_percent": 68.3
+    },
+    {
+      "device": "D:\\",
+      "mountpoint": "D:\\",
+      "filesystem": "NTFS",
+      "total_gb": 953.87,
+      "used_gb": 577.19,
+      "free_gb": 376.67,
+      "used_percent": 60.5
+    }
+  ],
+  "network": [
+    {
+      "name": "Ethernet",
+      "ip_addresses": [
+        "169.254.189.114",
+        "fe80::88ae:2a0c:16c6:b3f9"
+      ],
+      "mac_address": null,
+      "is_up": false
+    },
+    {
+      "name": "Wi-Fi 2",
+      "ip_addresses": [
+        "169.254.218.32",
+        "fe80::2291:18d1:2ab0:f81f"
+      ],
+      "mac_address": null,
+      "is_up": false
+    },
+    {
+      "name": "Wi-Fi 4",
+      "ip_addresses": [
+        "169.254.248.232",
+        "fe80::717:3c53:bcfd:bfb3"
+      ],
+      "mac_address": null,
+      "is_up": false
+    },
+    {
+      "name": "Wi-Fi",
+      "ip_addresses": [
+        "192.168.2.64",
+        "fe80::f5cb:52fb:f3c1:65"
+      ],
+      "mac_address": null,
+      "is_up": true
+    },
+    {
+      "name": "Loopback Pseudo-Interface 1",
+      "ip_addresses": [
+        "127.0.0.1",
+        "::1"
+      ],
+      "mac_address": null,
+      "is_up": true
+    }
+  ],
+  "warnings": []
+}
