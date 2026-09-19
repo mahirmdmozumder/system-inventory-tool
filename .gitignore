@@ -14,6 +14,8 @@ venv/
 # separately under sample_output/ so the repo shows real output without
 # depending on a fresh run.
 reports/
+report.json
+report.txt
 *.report.json
 *.report.txt
 fleet*.csv
